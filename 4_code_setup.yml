@@ -1,0 +1,88 @@
+---
+- hosts: yalink-dev
+  become: yes
+  tasks:
+    - name: Create yalink directory
+      ansible.builtin.file:
+        path: /home/{{ item.name }}/yalink
+        state: directory
+        mode: "0777"
+        owner: "{{ item.name }}"
+        group: "{{ item.name }}"
+      loop: "{{ users }}"
+
+    - name: Create virtualenv in yalink directory
+      become_user: "{{ item.name }}"
+      command:
+        cmd: python3 -m venv /home/{{ item.name }}/yalink/yalink_virtualenv
+        creates: "/home/{{ item.name }}/yalink/yalink_virtualenv"
+      loop: "{{ users }}"
+
+    - name: Clone callisto-core
+      become_user: "{{ item.name }}"
+      ansible.builtin.git:
+        repo: https://github.com/Yalink-Tech/callisto-core.git
+        dest: /home/{{ item.name }}/yalink/callisto-core
+        update: no
+      loop: "{{ users }}"
+
+    - name: Install dotenv
+      become_user: "{{ item.name }}"
+      pip:
+        name: python-dotenv
+        virtualenv: /home/{{ item.name }}/yalink/yalink_virtualenv
+      loop: "{{ users }}"
+
+    - name: Install callisto-core requirements
+      become_user: "{{ item.name }}"
+      pip:
+        requirements: /home/{{ item.name }}/yalink/callisto-core/requirements.txt
+        virtualenv: /home/{{ item.name }}/yalink/yalink_virtualenv
+      loop: "{{ users }}"
+
+    - name: nvm install
+      become_user: "{{ item.name }}"
+      shell: >
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+      args:
+        creates: "/home/{{ item.name }}/.nvm/nvm.sh"
+      loop: "{{ users }}"
+
+    - name: Add a .zprofile to be able to source .zshrc
+      become_user: "{{ item.name }}"
+      copy:
+        dest: "/home/{{ item.name }}/.zprofile"
+        content: |
+          # include .zshrc if it exists
+          if [ -f "$HOME/.zshrc" ]; then
+            . "$HOME/.zshrc"
+          fi
+      loop: "{{ users }}"
+
+    - name: Install node v16.15.1
+      become_user: "{{ item.name }}"
+      shell: >
+        /bin/zsh -l -c 'nvm install v16.15.1'
+      loop: "{{ users }}"
+
+    - name: Install yarn
+      become_user: "{{ item.name }}"
+      shell: >
+        /bin/zsh -l -c 'npm install -g yarn'
+      loop: "{{ users }}"
+
+    - name: Clone callisto-client
+      become_user: "{{ item.name }}"
+      ansible.builtin.git:
+        repo: https://github.com/Yalink-Tech/callisto-client.git
+        dest: /home/{{ item.name }}/yalink/callisto-client
+        update: no
+      loop: "{{ users }}"
+
+    - name: Install all client deps
+      become_user: "{{ item.name }}"
+      shell: >
+        /bin/zsh -l -c 'yarn'
+      args:
+        chdir: /home/{{ item.name }}/yalink/callisto-client
+      loop: "{{ users }}"

@@ -1,11 +1,19 @@
 ---
 ansible_user: ubuntu
 ansible_ssh_private_key_file: ~/.ssh/id_ed25519
+ansible_system: Linux
 
-dev_users:
-  - username: alex
-    authorized_keys: data/authorized_keys
-  - username: raf
-    authorized_keys: data/authorized_keys
-  - username: soso
-    authorized_keys: data/authorized_keys
+users:
+  - name: alex
+    group: wheel
+    settings: ""
+  - name: raf
+    group: wheel
+    settings: ""
+  - name: soso
+    group: wheel
+    settings: ""
+
+omz_install_zsh: true
+
+db_base_name: yalink

@@ -1,0 +1,20 @@
+---
+- hosts: yalink-dev
+  become: yes
+  tasks:
+    - name: Install Redis
+      ansible.builtin.apt:
+        name: redis
+        state: present
+
+    - name: Install Postgresql
+      ansible.builtin.apt:
+        name:
+          - postgresql
+          - postgresql-contrib
+        state: present
+
+    - name: Install Postgresql python packages
+      ansible.builtin.apt:
+        name: python3-psycopg2
+        state: present
