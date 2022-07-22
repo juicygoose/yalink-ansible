@@ -8,9 +8,18 @@
         dest: /tmp/data.sql
         mode: "0777"
 
+    - name: Create db user
+      community.postgresql.postgresql_user:
+        state: present
+        name: yalink
+        password: yalink123
+      become: yes
+      become_user: postgres
+
     - name: Create database
       community.postgresql.postgresql_db:
         state: present
+        owner: yalink
         name: "{{ db_base_name }}.{{ item.name }}"
       become: yes
       become_user: postgres
@@ -21,25 +30,6 @@
         state: restore
         target: /tmp/data.sql
         name: "{{ db_base_name }}.{{ item.name }}"
-      become: yes
-      become_user: postgres
-      loop: "{{ users }}"
-
-    - name: Create db user
-      community.postgresql.postgresql_user:
-        state: present
-        name: yalink
-        password: yalink123
-      become: yes
-      become_user: postgres
-
-    - name: Grant db user access to app db
-      community.postgresql.postgresql_privs:
-        type: database
-        database: "{{ db_base_name }}.{{ item.name }}"
-        roles: yalink
-        grant_option: no
-        privs: all
       become: yes
       become_user: postgres
       loop: "{{ users }}"
